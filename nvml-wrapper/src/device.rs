@@ -1969,6 +1969,21 @@ impl<'nvml> Device<'nvml> {
         }
     }
 
+    #[doc(alias = "nvmlDeviceGetMemoryInfo_V2")]
+    pub fn memory_info_v2(&self) -> Result<MemoryInfoV2, NvmlError> {
+        let sym = nvml_sym(self.nvml.lib.nvmlDeviceGetMemoryInfo_v2.as_ref())?;
+
+        unsafe {
+            let mut info: nvmlMemory_v2_t = mem::zeroed();
+
+            // Implements NVML_STRUCT_VERSION(Memory, 2), as detailed in nvml.h (https://github.com/NVIDIA/nvidia-settings/issues/78)
+            info.version = (std::mem::size_of::<nvmlMemory_v2_t>() | (2_usize << 24_usize)) as u32;
+            nvml_try(sym(self.device, &mut info))?;
+
+            Ok(info.into())
+        }
+    }
+
     /**
     Gets the minor number for this `Device`.
 
